@@ -53,6 +53,6 @@ cp ansible.cfg.do ansible.cfg
 
 # Related Projects to be released.
 - [ ]  Service Discovery using MarathonLb.
-- [ ]  Data Science Notebooks on Marathon.
+- [x]  [Data Science Notebooks on Marathon](https://github.com/pganzon/kuwaderno).
 - [ ]  Apache Airflow on Marathon.
 - [ ]  Instructions for implementation on other cloud providers.
