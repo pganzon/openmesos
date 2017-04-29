@@ -1,0 +1,12 @@
+# Java
+javaversion: jdk1.8.0_65
+javahome: /usr/lib/jvm/java-8-oracle
+
+# Hadoop
+hadooptar: hadoop-2.7.2.tar.gz
+hadoopsvcacc: hdfs
+hadoopversion: hadoop-2.7.2
+hadoophome: /opt/{{ hadoopversion }}
+hdfsdatadir: /var/hdfs
+yarndatadir: /var/tmp/yarn
+mapreddatadir: /var/tmp

@@ -1,0 +1,29 @@
+# Configuration Dir
+# Ethernet name. For example, eth0, enps0s8 for mac etc.
+ansible_ethernet_name: eth0
+
+# Java
+java_version: jdk1.8.0_65
+java_home: /usr/lib/jvm/java-8-oracle
+
+# Mesos
+# mesos_setup: single or cluster
+mesos_setup: single
+mesos_version: 1.1.0-2.0.107.ubuntu1604
+mesos_slave_workdir: /var/mesos_slave_workdir
+
+zk_file: /etc/mesos/zk
+zk_quorum: /etc/mesos-master/quorum
+zk_quorumval: 1
+
+marathon_usr: madmin
+marathon_pwd: password123
+marathon_ssl: no
+marathon_ssl_keystore_path: /vagrant/keys/marathon.jks
+marathon_ssl_keystore_password: sslpassword
+
+
+# Environment Variables
+env:
+    PATH: "{{ lookup('env','PATH') }}:{{ java_home }}/bin"
+    JAVA_HOME: "{{ java_home }}"

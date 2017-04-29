@@ -1,0 +1,9 @@
+[
+  {
+    "name": "mem",
+    "type": "SCALAR",
+    "scalar": {
+      "value":  {{ mesosslavemem }}
+    }
+  }
+]

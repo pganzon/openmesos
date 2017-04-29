@@ -1,0 +1,11 @@
+zkfile: /etc/mesos/zk
+zkquorum: /etc/mesos-master/quorum
+zkquorumval: 2
+
+marathonusr: madmin
+marathonpwd: pwd123
+marathonssl: no
+
+marathonsslkeystorepath: /vagrant/keys/marathon.jks
+marathonsslkeystorepassword: password
+

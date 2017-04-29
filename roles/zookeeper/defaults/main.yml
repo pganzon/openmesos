@@ -1,0 +1,7 @@
+# mesosversion
+mesosversion: 0.28.1-2.0.20.ubuntu1404
+
+# Zookeeper
+zkmyid: /etc/zookeeper/conf/myid
+zkzoocfg: /etc/zookeeper/conf/zoo.cfg
+zkdatadir: /var/lib/zookeeper

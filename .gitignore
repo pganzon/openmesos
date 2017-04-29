@@ -1,0 +1,10 @@
+*.log
+.vagrant
+*.jks
+*.key
+*.pkcs12
+*.pem
+*.crt
+*.csr
+*.personal
+.DS_Store

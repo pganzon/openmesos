@@ -1,0 +1,98 @@
+- name: Install Marathon
+  apt: >
+     name=marathon
+     force=yes
+  become: yes
+
+- name: Create marathon conf
+  file: >
+      path=/etc/marathon/conf
+      recurse=yes
+      state=directory
+      mode=755
+  become: yes
+
+- name: Additional marathon conf
+  template: >
+     src={{ item }}
+     dest=/etc/marathon/conf/{{ item }}
+  become: yes
+  with_items:
+      - http_credentials
+
+
+- name: Additional marathon ssl conf
+  template: >
+     src={{ item }}
+     dest=/etc/marathon/conf/{{ item }}
+  become: yes
+  with_items:
+      - ssl_keystore_path
+      - ssl_keystore_password
+  when: marathon_ssl == true
+
+- name:  Remove mesos-master config if exists
+  file: >
+     dest={{ item }}
+     state=absent
+  become: yes
+  with_items:
+      - /etc/mesos-master/hostname
+      - /etc/mesos-master/ip
+
+- name: Create mesos-master config
+  file: >
+     dest={{ item }}
+     state=touch
+  become: yes
+  with_items:
+      - /etc/mesos-master/hostname
+      - /etc/mesos-master/ip
+
+- name: Configure mesos-master hostname
+  lineinfile: >
+      dest={{ item }}
+      line="{{ hostvars[inventory_hostname]['ansible_'+ansible_ethernet_name]['ipv4']['address'] }}"
+  when: hostvars[inventory_hostname]['ansible_'+ansible_ethernet_name]['ipv4']['address'] is defined
+  become: yes
+  with_items:
+      - /etc/mesos-master/hostname
+      - /etc/mesos-master/ip
+
+
+- name: Create quorom config
+  file: >
+      state=touch
+      dest={{ zkquorum }}
+  become: yes
+
+- name: Put quorum value
+  become: yes
+  shell: "echo '{{ zkquorumval }}' > {{ zkquorum }}"
+
+- name: Stop mesos slaves
+  become: yes
+  service: >
+         name=mesos-slave
+         state=stopped
+         enabled=no
+  when: mesos_setup == "cluster"
+
+- name: Disable mesos slave
+  shell: sh -c "echo manual > /etc/init/mesos-slave.override"
+  become: yes
+  when: mesos_setup == "cluster"
+
+- name: Restart mesos master
+  become: yes
+  service: >
+         name=mesos-master
+         state=restarted
+         enabled=yes
+
+- name: Restart marathon
+  become: yes
+  service: >
+         name=marathon
+         state=restarted
+         enabled=yes

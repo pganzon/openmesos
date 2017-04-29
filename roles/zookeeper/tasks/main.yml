@@ -1,0 +1,99 @@
+- name: Install zookeeper from mesos repo
+  become: yes
+  apt_key: >
+         keyserver=hkp://keyserver.ubuntu.com:80
+         id=E56151BF
+
+- name: Setup mesos apt source repo
+  shell: DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]'); CODENAME=$(lsb_release -cs); echo "deb http://repos.mesosphere.com/${DISTRO} ${CODENAME} main" | tee /etc/apt/sources.list.d/mesosphere.list
+  become: yes
+
+- name: Install Prereq
+  apt: >
+     name={{ item }}
+     force=yes
+     update_cache=yes
+  become: yes
+  with_items:
+            - autoconf
+            - libtool
+            - build-essential
+            - python-dev
+            - python-boto
+            - libcurl4-nss-dev
+            - libsasl2-dev 
+            - maven 
+            - libapr1-dev 
+            - libsvn-dev
+
+- name: Install Mesos
+  apt: >
+     name="mesos={{ mesosversion }}"
+     update_cache=yes
+     force=yes
+  become: yes
+
+- name: Create /var/lib/zookeeper
+  become: yes
+  file: >
+     state=directory
+     dest=/var/lib/zookeeper
+     owner=zookeeper
+
+- name: Create zoo.cfg
+  become: yes
+  file: >
+     state=touch
+     dest={{ zkzoocfg }}
+     owner=zookeeper
+- lineinfile: >
+     dest="{{ zkzoocfg }}"
+     line="{{ item }}"
+     insertafter=EOF
+  become: yes
+  with_items:
+     - "tickTime=2000"
+     - "dataDir={{ zkdatadir }}"
+     - "clientPort=2181"
+     - "initLimit=5"
+     - "syncLimit=2"
+
+- name: Add zookeeper servers
+  become: yes
+  lineinfile: >
+     dest={{ zkzoocfg }}
+     line="server.{{ item.0 + 1 }}={{ item.1 }}:2888:3888"
+     insertafter=EOF
+  with_indexed_items: groups['zookeeper']
+
+- name: Recreate myid
+  become: yes
+  file: >
+     dest={{ zkmyid }}
+     state={{ item }}
+     owner=zookeeper
+  with_items:
+      - absent
+      - touch
+
+- name: Update zookeeper myid config
+  become: yes
+  lineinfile: >
+     dest={{ zkmyid }}
+     line={{ item.0 + 1 }}
+     insertafter=EOF
+  when: inventory_hostname == "{{ item.1 }}"
+  with_indexed_items: groups['zookeeper']
+
+- name: Grant zookeeper access to bash
+  become: yes
+  user: >
+      name=zookeeper
+       shell=/bin/bash
+
+- name: Start Zookeeper
+  become: yes
+  service: >
+         name=zookeeper
+         state=started
+         enabled=yes

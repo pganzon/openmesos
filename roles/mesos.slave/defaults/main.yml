@@ -1,0 +1,3 @@
+mesosslavemem: 14746
+mesosslavecpu: 16
+mesosslaveworkdir: /datadrive/mesos/mesos-slave/var/lib/mesos

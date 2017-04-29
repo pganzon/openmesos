@@ -1,0 +1,72 @@
+- name:  Remove mesos-slave if exists
+  file: >
+     dest={{ item }}
+     state=absent
+  become: yes
+  with_items:
+      - /etc/mesos-slave/hostname
+      - /etc/mesos-slave/ip
+
+- name: Create mesos-slave conf
+  file: >
+     dest={{ item }}
+     state=touch
+  become: yes
+  with_items:
+      - /etc/mesos-slave/hostname
+      - /etc/mesos-slave/ip
+
+- name: Configure mesos-slave hostname
+  lineinfile: >
+      dest={{ item }}
+      line="{{ hostvars[inventory_hostname]['ansible_'+ansible_ethernet_name]['ipv4']['address'] }}"
+  when: hostvars[inventory_hostname]['ansible_'+ansible_ethernet_name]['ipv4']['address'] is defined
+  become: yes
+  with_items:
+      - /etc/mesos-slave/hostname
+      - /etc/mesos-slave/ip
+
+- name: Enable Docker containerizer
+  become: yes
+  shell: echo 'docker,mesos' > /etc/mesos-slave/containerizers
+
+- name: Increate executor timeout
+  become: yes
+  shell: echo '20mins' > /etc/mesos-slave/executor_registration_timeout
+
+- name: Create mesos-slave directory
+  file: >
+      path="{{ mesosslaveworkdir }}"
+      recurse=yes
+      state=directory
+      mode=755
+  become: yes
+
+
+- name: Additional Mesos-slave config
+  template: >
+     src={{ item }}
+     dest=/etc/mesos-slave/{{ item }}
+  become: yes
+  with_items:
+      - work_dir
+
+- name: Stop mesos masters
+  become: yes
+  service: >
+         name=mesos-master
+         state=stopped
+         enabled=no
+  when: mesos_setup == "cluster"
+
+- name: Disable mesos master
+  shell: sh -c "echo manual > /etc/init/mesos-master.override"
+  become: yes
+  when: mesos_setup == "cluster"
+
+- name: Restart mesos slaves
+  become: yes
+  service: >
+         name=mesos-slave
+         state=restarted
+         enabled=yes

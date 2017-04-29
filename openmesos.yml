@@ -1,0 +1,49 @@
+---
+- name: Setup Prerequisite
+  environment: "{{ env }}"
+  hosts: all
+  vars_files:
+     - vars/global_var.yml
+  roles:
+     - role: common
+       javahome: "{{ java_home }}"
+
+     - role: mesos.common
+       mesosversion: "{{ mesos_version }}"
+
+
+- name: Setup Zookeeper
+  environment: "{{ env }}"
+  hosts: zookeeper
+  vars_files:
+     - vars/global_var.yml
+  roles:
+     - role: zookeeper
+       mesosversion: "{{ mesos_version }}"
+
+
+- name: Setup Mesos master
+  environment: "{{ env }}"
+  hosts: mesosmasters
+  vars_files:
+     - vars/global_var.yml
+  roles:
+      - role: mesos.master
+        zkfile: "{{ zk_file }}"
+        zkquorum: "{{ zk_quorum }}"
+        zkquorumval: "{{ zk_quorumval }}"
+        marathonusr: "{{ marathon_usr }}"
+        marathonpwd: "{{ marathon_pwd }}"
+        marathonssl: "{{ marathon_ssl }}"
+        marathonsslkeystorepath: "{{ marathon_ssl_keystore_path }}"
+        marathonsslkeystorepassword: "{{ marathon_ssl_keystore_password }}"
+
+
+- name: Setup Mesos slave
+  environment: "{{ env }}"
+  hosts: mesosslaves
+  vars_files:
+     - vars/global_var.yml
+  roles:
+      - role: mesos.slave
+        mesosslaveworkdir: "{{ mesos_slave_workdir }}"

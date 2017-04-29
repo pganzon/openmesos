@@ -1,0 +1,68 @@
+##################################
+# Setup Network                  #
+##################################
+- name: Update hostname
+  become: yes
+  lineinfile: >
+     regexp=".*"
+     dest=/etc/hostname
+     line="{{ inventory_hostname }}"
+     state=present
+
+- name: Update hosts file
+  become: yes
+  lineinfile: >
+     dest=/etc/hosts
+     line="{{ hostvars[item]['ansible_'+ansible_ethernet_name]['ipv4']['address'] }} {{ item }}"
+     insertafter=EOF
+  when: hostvars[item]['ansible_'+ansible_ethernet_name]['ipv4']['address'] is defined
+  with_items: groups['all']
+
+##################################
+# Setup Prereq softwares         #
+##################################
+- name: Get linux distro
+  shell: cat /etc/*release | grep DISTRIB_CODENAME | awk -F'=' '{print $2}'
+  register: dstro
+
+- name: Add Java 8  apt key
+  become: yes
+  apt_key: >
+     keyserver=hkp://keyserver.ubuntu.com:80
+     id=EEA14886
+
+- name: Add java 8 ppa to apt source list
+  become: yes
+  lineinfile: >
+     dest=/etc/apt/sources.list
+     line="{{ item }}"
+     insertafter=EOF
+  with_items: 
+     - "deb http://ppa.launchpad.net/webupd8team/java/ubuntu {{ dstro.stdout }} main"
+     - "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu {{ dstro.stdout }} main"
+
+- name: set licence oracle license
+  become: yes
+  debconf: >
+     name='oracle-java8-installer'
+     question='shared/accepted-oracle-license-v1-1'
+     value='true'
+     vtype='select'
+
+- name: Install Java 8
+  become: yes
+  apt: >
+     name={{ item }}
+     update_cache=yes
+     force=yes
+  with_items:
+     - oracle-java8-installer
+     - oracle-java8-set-default
+
+- name: Setup JAVA_HOME 
+  become: yes
+  lineinfile: >
+      dest=/etc/environment
+      line={{ item }}
+  with_items: 
+      - "JAVA_HOME={{ javahome }}"
